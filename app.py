@@ -1,24 +1,22 @@
 import streamlit as st
-import nltk
+import re
 import numpy as np
-from nltk.tokenize import sent_tokenize
-from nltk.corpus import stopwords
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-# ---------- NLTK SETUP ----------
-nltk.download("punkt")
-nltk.download("stopwords")
-stop_words = stopwords.words("english")
+# ---------- SIMPLE SENTENCE TOKENIZER (NO NLTK) ----------
+def split_sentences(text):
+    sentences = re.split(r'(?<=[.!?])\s+', text.strip())
+    return [s for s in sentences if len(s.split()) > 3]
 
 # ---------- ML TEXT SUMMARIZER ----------
 def summarize_text(text, num_sentences=5):
-    sentences = sent_tokenize(text)
+    sentences = split_sentences(text)
 
     if len(sentences) <= num_sentences:
         return text
 
-    vectorizer = TfidfVectorizer(stop_words=stop_words)
+    vectorizer = TfidfVectorizer(stop_words="english")
     tfidf = vectorizer.fit_transform(sentences)
 
     similarity_matrix = cosine_similarity(tfidf)
@@ -33,7 +31,7 @@ def summarize_text(text, num_sentences=5):
 # ---------- STREAMLIT UI ----------
 st.set_page_config(page_title="Text Summarizer", layout="centered")
 st.title("📝 Text Summarizer (Machine Learning)")
-st.write("Paste any long text and get a short summary")
+st.write("Paste text and generate a summary instantly")
 
 text_input = st.text_area(
     "Enter text to summarize:",
