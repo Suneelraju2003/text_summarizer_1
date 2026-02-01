@@ -1,5 +1,4 @@
 import streamlit as st
-from pypdf import PdfReader
 import nltk
 import numpy as np
 from nltk.tokenize import sent_tokenize
@@ -11,14 +10,6 @@ from sklearn.metrics.pairwise import cosine_similarity
 nltk.download("punkt")
 nltk.download("stopwords")
 stop_words = stopwords.words("english")
-
-# ---------- PDF TEXT EXTRACTION ----------
-def extract_text_from_pdf(pdf_file):
-    reader = PdfReader(pdf_file)
-    text = ""
-    for page in reader.pages:
-        text += page.extract_text() or ""
-    return text
 
 # ---------- ML TEXT SUMMARIZER ----------
 def summarize_text(text, num_sentences=5):
@@ -40,24 +31,30 @@ def summarize_text(text, num_sentences=5):
     return summary
 
 # ---------- STREAMLIT UI ----------
-st.set_page_config(page_title="PDF Text Summarizer", layout="centered")
-st.title("📄 PDF Text Summarizer (Machine Learning)")
+st.set_page_config(page_title="Text Summarizer", layout="centered")
+st.title("📝 Text Summarizer (Machine Learning)")
+st.write("Paste any long text and get a short summary")
 
-uploaded_file = st.file_uploader("Upload a PDF file", type=["pdf"])
-num_sentences = st.slider("Number of summary sentences", 3, 15, 5)
+text_input = st.text_area(
+    "Enter text to summarize:",
+    height=300,
+    placeholder="Paste article, notes, research paper text here..."
+)
 
-if uploaded_file:
-    with st.spinner("Reading PDF..."):
-        text = extract_text_from_pdf(uploaded_file)
+num_sentences = st.slider(
+    "Summary length (number of sentences)",
+    2, 15, 5
+)
 
-    if not text.strip():
-        st.error("No readable text found in PDF.")
+if st.button("Summarize"):
+    if not text_input.strip():
+        st.warning("Please enter some text.")
     else:
         with st.spinner("Generating summary..."):
-            summary = summarize_text(text, num_sentences)
+            summary = summarize_text(text_input, num_sentences)
 
         st.subheader("✅ Summary")
         st.write(summary)
 
-        with st.expander("📜 Full Extracted Text"):
-            st.write(text)
+        with st.expander("📜 Original Text"):
+            st.write(text_input)
